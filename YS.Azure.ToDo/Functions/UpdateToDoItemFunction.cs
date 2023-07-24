@@ -5,6 +5,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using YS.Azure.ToDo.Contracts;
+using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
 
@@ -14,12 +15,12 @@ namespace YS.Azure.ToDo.Functions
     {
         private readonly ILogger<UpdateToDoItemFunction> _logger;
         private readonly IToDoService _toDoService;
-        private readonly IValidator<ToDoItem> _toDoValidator;
+        private readonly IValidator<ToDoItemModel> _toDoValidator;
 
         public UpdateToDoItemFunction(
             ILogger<UpdateToDoItemFunction> logger, 
             IToDoService toDoService, 
-            IValidator<ToDoItem> toDoValidator)
+            IValidator<ToDoItemModel> toDoValidator)
         {
             _logger = logger;
             _toDoService = toDoService;
@@ -32,15 +33,15 @@ namespace YS.Azure.ToDo.Functions
         {
             _logger.LogInformation("Got request for updating TODO item.");
             
-            ToDoItem item;
+            ToDoItemModel itemModel;
 
             using (var streamReader = new StreamReader(req.Body))
             {
                 var stringContent = await streamReader.ReadToEndAsync();
-                item = JsonConvert.DeserializeObject<ToDoItem>(stringContent)!;
+                itemModel = JsonConvert.DeserializeObject<ToDoItemModel>(stringContent)!;
             }
 
-            var validationResult = await _toDoValidator.ValidateAsync(item);
+            var validationResult = await _toDoValidator.ValidateAsync(itemModel);
             
             _logger.LogInformation("TODO item validated.");
             
@@ -55,7 +56,7 @@ namespace YS.Azure.ToDo.Functions
                 });
             }
             
-            var updatedItem = await _toDoService.UpdateToDoItemAsync(item.Id, item);
+            var updatedItem = await _toDoService.UpdateToDoItemAsync(itemModel);
             
             _logger.LogInformation("TODO item successfully updated.");
 

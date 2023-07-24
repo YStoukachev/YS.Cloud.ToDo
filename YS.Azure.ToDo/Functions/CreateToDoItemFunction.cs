@@ -5,6 +5,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using YS.Azure.ToDo.Contracts;
+using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
 
@@ -12,12 +13,11 @@ namespace YS.Azure.ToDo.Functions
 {
     public class CreateToDoItemFunction
     {
-        private readonly IValidator<ToDoItem> _toDoItemValidator;
+        private readonly IValidator<ToDoItemModel> _toDoItemValidator;
         private readonly IToDoService _toDoService;
         private readonly ILogger<CreateToDoItemFunction> _logger;
-
         public CreateToDoItemFunction(
-            IValidator<ToDoItem> toDoItemValidator, 
+            IValidator<ToDoItemModel> toDoItemValidator, 
             IToDoService toDoService, 
             ILogger<CreateToDoItemFunction> logger)
         {
@@ -33,15 +33,15 @@ namespace YS.Azure.ToDo.Functions
         {
             _logger.LogInformation("Got request for creating TODO item.");
             
-            ToDoItem item;
+            ToDoItemModel itemModel;
 
             using (var streamReader = new StreamReader(req.Body))
             {
                 var stringContent = await streamReader.ReadToEndAsync();
-                item = JsonConvert.DeserializeObject<ToDoItem>(stringContent)!;
+                itemModel = JsonConvert.DeserializeObject<ToDoItemModel>(stringContent)!;
             }
 
-            var validationResult = await _toDoItemValidator.ValidateAsync(item);
+            var validationResult = await _toDoItemValidator.ValidateAsync(itemModel);
             
             _logger.LogInformation("TODO item validated.");
 
@@ -56,7 +56,7 @@ namespace YS.Azure.ToDo.Functions
                 });
             }
 
-            var createdItem = await _toDoService.CreateToDoItemAsync(item);
+            var createdItem = await _toDoService.CreateToDoItemAsync(itemModel);
             
             _logger.LogInformation("TODO item successfully created.");
 

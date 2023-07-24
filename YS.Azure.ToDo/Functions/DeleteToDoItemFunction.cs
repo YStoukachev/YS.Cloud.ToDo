@@ -4,6 +4,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using YS.Azure.ToDo.Contracts;
+using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
 
@@ -31,7 +32,7 @@ namespace YS.Azure.ToDo.Functions
             _logger.LogInformation("Got request for deleting TODO item.");
 
             var query = HttpUtility.ParseQueryString(req.Url.Query);
-            var itemId = query[nameof(ToDoItem.Id)];
+            var itemId = query[nameof(ToDoItemModel.Id)];
 
             if (!Guid.TryParse(itemId, out var parsedItemId))
             {
