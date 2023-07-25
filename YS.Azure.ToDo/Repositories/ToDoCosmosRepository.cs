@@ -5,9 +5,9 @@ using YS.Azure.ToDo.Models;
 
 namespace YS.Azure.ToDo.Repositories
 {
-    public class ToDoRepository : CosmosRepositoryBase<ToDoItemModel>, IToDoRepository
+    public class ToDoCosmosRepository : CosmosRepositoryBase<ToDoItemModel>, IToDoCosmosRepository
     {
-        public ToDoRepository(
+        public ToDoCosmosRepository(
             IOptions<ToDoOptions> toDoOptions,
             IOptions<CosmosDbOptions> cosmosDbOptions)
             : base(

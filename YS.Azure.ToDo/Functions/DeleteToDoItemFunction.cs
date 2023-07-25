@@ -7,6 +7,7 @@ using YS.Azure.ToDo.Contracts;
 using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
+using YS.Azure.ToDo.Models.Responses;
 
 namespace YS.Azure.ToDo.Functions
 {
@@ -25,7 +26,7 @@ namespace YS.Azure.ToDo.Functions
 
         [Function(nameof(DeleteToDoItemFunction))]
         public async Task<HttpResponseData> RunAsync(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "delete")]
+            [HttpTrigger(AuthorizationLevel.Anonymous, "delete", Route = "task/delete")]
             HttpRequestData req,
             FunctionContext executionContext)
         {

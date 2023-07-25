@@ -2,7 +2,7 @@
 
 namespace YS.Azure.ToDo.Contracts.Repositories
 {
-    public interface IRepository<TEntity>
+    public interface ICosmosRepository<TEntity>
     {
         Task<TEntity> UpsertAsync(TEntity entity, CancellationToken cancellationToken = default);
 

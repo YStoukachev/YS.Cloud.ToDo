@@ -1,4 +1,4 @@
-﻿namespace YS.Azure.ToDo.Models
+﻿namespace YS.Azure.ToDo.Models.Requests
 {
     public class AddFileRequestModel
     {

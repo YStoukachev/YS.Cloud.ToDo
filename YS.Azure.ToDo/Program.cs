@@ -16,7 +16,8 @@ namespace YS.Azure.ToDo
                         .AddAppOptions()
                         .AddLogging()
                         .AddValidator()
-                        .AddBusinessLogic();
+                        .AddBusinessLogic()
+                        .AddAppDbContext();
                 })
                 .ConfigureAppConfiguration(ConfigureOptions)
                 .Build();

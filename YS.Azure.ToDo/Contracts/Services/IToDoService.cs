@@ -1,5 +1,6 @@
 ﻿using System.Linq.Expressions;
 using YS.Azure.ToDo.Models;
+using YS.Azure.ToDo.Models.Requests;
 
 namespace YS.Azure.ToDo.Contracts.Services
 {
@@ -16,5 +17,9 @@ namespace YS.Azure.ToDo.Contracts.Services
         Task UpdateTaskStatusesAsync(CancellationToken cancellationToken = default);
 
         Task UploadFileToTaskAsync(AddFileRequestModel model, CancellationToken cancellationToken = default);
+
+        Task ArchiveTaskAsync(Guid taskId, CancellationToken cancellationToken = default);
+
+        Task UnarchiveTaskAsync(Guid taskId, CancellationToken cancellationToken = default);
     }
 }

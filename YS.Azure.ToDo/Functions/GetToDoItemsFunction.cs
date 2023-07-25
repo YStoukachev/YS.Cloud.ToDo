@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
+using YS.Azure.ToDo.Models.Responses;
 
 namespace YS.Azure.ToDo.Functions
 {
@@ -23,7 +24,7 @@ namespace YS.Azure.ToDo.Functions
 
         [Function(nameof(GetToDoItemsFunction))]
         public async Task<HttpResponseData> RunAsync(
-            [HttpTrigger(AuthorizationLevel.Function, "get")] HttpRequestData req,
+            [HttpTrigger(AuthorizationLevel.Function, "get", Route = "task/get")] HttpRequestData req,
             FunctionContext executionContext)
         {
             _logger.LogInformation("Got request for getting TODO items.");

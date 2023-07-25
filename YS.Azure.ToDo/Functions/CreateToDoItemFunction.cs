@@ -8,6 +8,7 @@ using YS.Azure.ToDo.Contracts;
 using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
+using YS.Azure.ToDo.Models.Responses;
 
 namespace YS.Azure.ToDo.Functions
 {
@@ -28,7 +29,7 @@ namespace YS.Azure.ToDo.Functions
 
         [Function(nameof(CreateToDoItemFunction))]
         public async Task<HttpResponseData> RunAsync(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "post")]
+            [HttpTrigger(AuthorizationLevel.Anonymous, "post", Route = "task/create")]
             HttpRequestData req)
         {
             _logger.LogInformation("Got request for creating TODO item.");
@@ -40,6 +41,8 @@ namespace YS.Azure.ToDo.Functions
                 var stringContent = await streamReader.ReadToEndAsync();
                 itemModel = JsonConvert.DeserializeObject<ToDoItemModel>(stringContent)!;
             }
+            
+            itemModel.Id = Guid.NewGuid();
 
             var validationResult = await _toDoItemValidator.ValidateAsync(itemModel);
             

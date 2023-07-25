@@ -5,6 +5,8 @@ using Microsoft.Extensions.Logging;
 using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
+using YS.Azure.ToDo.Models.Requests;
+using YS.Azure.ToDo.Models.Responses;
 
 namespace YS.Azure.ToDo.Functions
 {
@@ -26,11 +28,10 @@ namespace YS.Azure.ToDo.Functions
 
         [Function(nameof(UploadFileToToDoItemFunction))]
         public async Task<HttpResponseData> RunAsync(
-            [HttpTrigger(AuthorizationLevel.Function, "post")] HttpRequestData req)
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "content/upload")] HttpRequestData req)
         {
             _logger.LogInformation("Got request for adding file to TODO item.");
 
-            var contentTypeHeader = string.Empty;
             var boundary = GetBoundaryFromContentType(
                 GetHeaderValue("Content-Type", req.Headers));
             var model = await _formParser.ParseForm<AddFileRequestModel>(boundary, req.Body);

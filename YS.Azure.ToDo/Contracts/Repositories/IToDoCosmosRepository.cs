@@ -2,7 +2,7 @@
 
 namespace YS.Azure.ToDo.Contracts.Repositories
 {
-    public interface IToDoRepository : IRepository<ToDoItemModel>
+    public interface IToDoCosmosRepository : ICosmosRepository<ToDoItemModel>
     {
         
     }

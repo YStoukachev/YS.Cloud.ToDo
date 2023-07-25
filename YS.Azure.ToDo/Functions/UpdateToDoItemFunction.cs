@@ -8,6 +8,7 @@ using YS.Azure.ToDo.Contracts;
 using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
+using YS.Azure.ToDo.Models.Responses;
 
 namespace YS.Azure.ToDo.Functions
 {
@@ -29,7 +30,7 @@ namespace YS.Azure.ToDo.Functions
 
         [Function(nameof(UpdateToDoItemFunction))]
         public async Task<HttpResponseData> RunAsync(
-            [HttpTrigger(AuthorizationLevel.Anonymous, "put")] HttpRequestData req)
+            [HttpTrigger(AuthorizationLevel.Anonymous, "put", Route = "task/update")] HttpRequestData req)
         {
             _logger.LogInformation("Got request for updating TODO item.");
             
