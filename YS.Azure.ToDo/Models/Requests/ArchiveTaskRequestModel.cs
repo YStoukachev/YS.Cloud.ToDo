@@ -2,7 +2,7 @@
 {
     public class ArchiveTaskRequestModel
     {
-        public Guid TaskId { get; set; }
+        public string TaskId { get; set; } = null!;
 
         public bool Archive { get; set; }
     }

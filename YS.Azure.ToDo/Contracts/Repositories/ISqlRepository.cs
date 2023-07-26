@@ -9,7 +9,7 @@ namespace YS.Azure.ToDo.Contracts.Repositories
 
         Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default);
 
-        Task DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+        Task DeleteAsync(string id, CancellationToken cancellationToken = default);
         
         Task<IQueryable<TEntity>> GetAsync(Expression<Func<TEntity, bool>>? selector = null, CancellationToken cancellationToken = default);
     }

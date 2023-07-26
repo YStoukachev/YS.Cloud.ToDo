@@ -42,7 +42,7 @@ namespace YS.Azure.ToDo.Functions
                 itemModel = JsonConvert.DeserializeObject<ToDoItemModel>(stringContent)!;
             }
             
-            itemModel.Id = Guid.NewGuid();
+            itemModel.Id = Guid.NewGuid().ToString();
 
             var validationResult = await _toDoItemValidator.ValidateAsync(itemModel);
             

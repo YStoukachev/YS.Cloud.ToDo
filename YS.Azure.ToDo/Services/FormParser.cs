@@ -28,12 +28,20 @@ namespace YS.Azure.ToDo.Services
                     if (contentDisposition.IsFileDisposition())
                     {
                         // File section
-                        using (var memoryStream = new MemoryStream())
-                        {
-                            await section.Body.CopyToAsync(memoryStream, cancellationToken);
+                        var fileContent = new MemoryStream();
+                        var extension = contentDisposition
+                            .Parameters
+                            .Last()
+                            .Value
+                            .ToString()
+                            .Split(".")
+                            .Last();
+                        extension = extension.Remove(extension.Length - 1);
+                        
+                        await section.Body.CopyToAsync(fileContent, cancellationToken);
+                        fileContent.Position = 0;
 
-                            property.SetValue(result, memoryStream);
-                        }
+                        property.SetValue(result, (fileContent, extension));
                     }
                     else if (contentDisposition.IsFormDisposition())
                     {

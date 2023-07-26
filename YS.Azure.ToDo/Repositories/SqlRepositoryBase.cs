@@ -46,7 +46,7 @@ namespace YS.Azure.ToDo.Repositories
             return entity;
         }
 
-        public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+        public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         {
             await using (_dbContext)
             {
@@ -78,7 +78,7 @@ namespace YS.Azure.ToDo.Repositories
             }
         }
 
-        private async Task<TEntity?> GetExistingEntity(Guid id, CancellationToken cancellationToken = default)
+        private async Task<TEntity?> GetExistingEntity(string id, CancellationToken cancellationToken = default)
         {
             var dbSet = _dbContext
                 .Set<TEntity>();

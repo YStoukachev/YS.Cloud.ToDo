@@ -10,7 +10,7 @@ namespace YS.Azure.ToDo.Contracts.Services
 
         Task<ToDoItemModel> UpdateToDoItemAsync(ToDoItemModel itemModel, CancellationToken cancellationToken = default);
 
-        Task DeleteToDoItemAsync(Guid itemId, CancellationToken cancellationToken = default);
+        Task DeleteToDoItemAsync(string itemId, CancellationToken cancellationToken = default);
         
         Task<IEnumerable<ToDoItemModel>> GetToDosAsync(Expression<Func<ToDoItemModel, bool>> selector = null!, CancellationToken cancellationToken = default);
 
@@ -18,8 +18,8 @@ namespace YS.Azure.ToDo.Contracts.Services
 
         Task UploadFileToTaskAsync(AddFileRequestModel model, CancellationToken cancellationToken = default);
 
-        Task ArchiveTaskAsync(Guid taskId, CancellationToken cancellationToken = default);
+        Task ArchiveTaskAsync(string taskId, CancellationToken cancellationToken = default);
 
-        Task UnarchiveTaskAsync(Guid taskId, CancellationToken cancellationToken = default);
+        Task UnarchiveTaskAsync(string taskId, CancellationToken cancellationToken = default);
     }
 }

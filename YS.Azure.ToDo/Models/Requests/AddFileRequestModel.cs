@@ -2,8 +2,8 @@
 {
     public class AddFileRequestModel
     {
-        public Guid TaskId { get; set; }
+        public string TaskId { get; set; } = null!;
 
-        public Stream FileContent { get; set; } = null!;
+        public (MemoryStream FileContent, string FileExtension) File { get; set; } = (null, null)!;
     }
 }

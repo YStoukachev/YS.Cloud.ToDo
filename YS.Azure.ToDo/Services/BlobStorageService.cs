@@ -1,4 +1,5 @@
 ﻿using Azure.Storage.Blobs;
+using Microsoft.Extensions.Options;
 using YS.Azure.ToDo.Configuration;
 using YS.Azure.ToDo.Contracts.Services;
 
@@ -10,10 +11,10 @@ namespace YS.Azure.ToDo.Services
 
         public BlobStorageService(
             IBlobClientProvider blobClientProvider,
-            BlobStorageOptions blobStorageOptions)
+            IOptions<BlobStorageOptions> blobStorageOptions)
         {
             _blobContainerClient = blobClientProvider
-                .GetBlobContainerClient(blobStorageOptions.ConnectionString, blobStorageOptions.BlobContainerName);
+                .GetBlobContainerClient(blobStorageOptions.Value.ConnectionString, blobStorageOptions.Value.BlobContainerName);
         }
 
         public async Task UploadBlobAsync(string fileName, Stream fileContent, CancellationToken cancellationToken = default)

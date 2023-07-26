@@ -57,7 +57,7 @@ namespace YS.Azure.ToDo.Functions
                 });
             }
 
-            await _toDoService.DeleteToDoItemAsync(parsedItemId);
+            await _toDoService.DeleteToDoItemAsync(itemId);
 
             return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
             {

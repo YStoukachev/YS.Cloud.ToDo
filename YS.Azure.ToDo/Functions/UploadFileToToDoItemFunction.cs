@@ -3,6 +3,7 @@ using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using YS.Azure.ToDo.Contracts.Services;
+using YS.Azure.ToDo.Exceptions;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
 using YS.Azure.ToDo.Models.Requests;
@@ -28,7 +29,7 @@ namespace YS.Azure.ToDo.Functions
 
         [Function(nameof(UploadFileToToDoItemFunction))]
         public async Task<HttpResponseData> RunAsync(
-            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "content/upload")] HttpRequestData req)
+            [HttpTrigger(AuthorizationLevel.Function, "post", Route = "task/content/upload")] HttpRequestData req)
         {
             _logger.LogInformation("Got request for adding file to TODO item.");
 
@@ -39,15 +40,28 @@ namespace YS.Azure.ToDo.Functions
             _logger.LogInformation("Successfully parsed form.");
             _logger.LogInformation("Uploading file to blob storage.");
 
-            await _toDoService.UploadFileToTaskAsync(model);
-            
-            _logger.LogInformation("File successfully uploaded.");
-
-            return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
+            try
             {
-                Message = "File successfully uploaded",
-                OperationName = nameof(UploadFileToToDoItemFunction)
-            });
+                await _toDoService.UploadFileToTaskAsync(model);
+                
+                _logger.LogInformation("File successfully uploaded.");
+
+                return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
+                {
+                    Message = "File successfully uploaded",
+                    OperationName = nameof(UploadFileToToDoItemFunction)
+                });
+            }
+            catch (TaskNotFoundException e)
+            {
+                _logger.LogWarning(e.Message);
+
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    Message = e.Message,
+                    OperationName = nameof(UploadFileToToDoItemFunction)
+                });
+            }
         }
         
         private static string GetBoundaryFromContentType(string contentType)

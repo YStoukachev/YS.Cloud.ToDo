@@ -1,7 +1,10 @@
-﻿namespace YS.Azure.ToDo.Models
+﻿using Newtonsoft.Json;
+
+namespace YS.Azure.ToDo.Models
 {
     public class IdEntity
     {
-        public Guid Id { get; set; }
+        [JsonProperty("id")]
+        public string Id { get; set; } = null!;
     }
 }

@@ -29,7 +29,7 @@ namespace YS.Azure.ToDo
         {
             configurationBuilder
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("local.settings.json");
+                .AddJsonFile("local.settings.json", false);
 
             configurationBuilder.Build();
         }
