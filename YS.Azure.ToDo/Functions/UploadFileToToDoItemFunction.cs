@@ -58,7 +58,7 @@ namespace YS.Azure.ToDo.Functions
 
                 return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
                 {
-                    Message = e.Message,
+                    Error = e.Message,
                     OperationName = nameof(UploadFileToToDoItemFunction)
                 });
             }

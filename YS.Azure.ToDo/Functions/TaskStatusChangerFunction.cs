@@ -1,6 +1,5 @@
 ﻿using Microsoft.Azure.Functions.Worker;
 using Microsoft.Extensions.Logging;
-using YS.Azure.ToDo.Contracts;
 using YS.Azure.ToDo.Contracts.Services;
 
 namespace YS.Azure.ToDo.Functions

@@ -5,7 +5,12 @@ namespace YS.Azure.ToDo.EntityFramework
 {
     public class ToDoContext : DbContext
     {
-        public DbSet<ToDoItemModel> ToDoItems { get; set; } = null!;
+        public DbSet<ToDoEntity> ToDoItems { get; set; } = null!;
+
+        public ToDoContext()
+        {
+            
+        }
 
         public ToDoContext(DbContextOptions<ToDoContext> options) 
             : base(options)
@@ -15,7 +20,11 @@ namespace YS.Azure.ToDo.EntityFramework
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder
-                .Entity<ToDoItemModel>()
+                .Entity<ToDoEntity>()
+                .ToTable("ArchivedTasks");
+            
+            modelBuilder
+                .Entity<ToDoEntity>()
                 .HasKey(_ => _.Id);
             
             base.OnModelCreating(modelBuilder);

@@ -4,6 +4,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using YS.Azure.ToDo.Contracts.Services;
+using YS.Azure.ToDo.Exceptions;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models.Requests;
 using YS.Azure.ToDo.Models.Responses;
@@ -38,17 +39,28 @@ namespace YS.Azure.ToDo.Functions
                 model = JsonConvert.DeserializeObject<ArchiveTaskRequestModel>(stringContent)!;
             }
 
-            if (model.Archive)
+            try
             {
-                await _toDoService.ArchiveTaskAsync(model.TaskId);
+                if (model.Archive)
+                {
+                    await _toDoService.ArchiveTaskAsync(model.TaskId);
                 
-                _logger.LogInformation("Task successfully archived.");
+                    _logger.LogInformation("Task successfully archived.");
+                }
+                else
+                {
+                    await _toDoService.UnarchiveTaskAsync(model.TaskId);
+                
+                    _logger.LogInformation("Task successfully unarchived.");
+                }
             }
-            else
+            catch (TaskNotFoundException e)
             {
-                await _toDoService.UnarchiveTaskAsync(model.TaskId);
-                
-                _logger.LogInformation("Task successfully unarchived.");
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(ArchiveToDoItemFunction),
+                    Error = e.Message
+                });
             }
 
             return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage

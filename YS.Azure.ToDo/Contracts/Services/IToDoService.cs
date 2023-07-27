@@ -21,5 +21,7 @@ namespace YS.Azure.ToDo.Contracts.Services
         Task ArchiveTaskAsync(string taskId, CancellationToken cancellationToken = default);
 
         Task UnarchiveTaskAsync(string taskId, CancellationToken cancellationToken = default);
+
+        Task<IList<ToDoEntity>> GetArchivedTasksAsync(CancellationToken cancellationToken = default);
     }
 }

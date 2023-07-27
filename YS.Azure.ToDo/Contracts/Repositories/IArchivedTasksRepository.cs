@@ -2,7 +2,7 @@
 
 namespace YS.Azure.ToDo.Contracts.Repositories
 {
-    public interface IArchivedTasksRepository : ISqlRepository<ToDoItemModel>
+    public interface IArchivedTasksRepository : ISqlRepository<ToDoEntity>
     {
         
     }

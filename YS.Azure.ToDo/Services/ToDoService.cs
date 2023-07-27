@@ -1,4 +1,5 @@
 ﻿using System.Linq.Expressions;
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using YS.Azure.ToDo.Configuration;
@@ -16,16 +17,19 @@ namespace YS.Azure.ToDo.Services
         private readonly IBlobStorageService _blobStorageService;
         private readonly ToDoOptions _toDoOptions;
         private readonly IArchivedTasksRepository _archivedTasksRepository;
+        private readonly IMapper _mapper;
 
         public ToDoService(
             IToDoCosmosRepository toDoCosmosRepository, 
             IBlobStorageService blobStorageService, 
             IOptions<ToDoOptions> toDoOptions, 
-            IArchivedTasksRepository archivedTasksRepository)
+            IArchivedTasksRepository archivedTasksRepository, 
+            IMapper mapper)
         {
             _toDoCosmosRepository = toDoCosmosRepository;
             _blobStorageService = blobStorageService;
             _archivedTasksRepository = archivedTasksRepository;
+            _mapper = mapper;
             _toDoOptions = toDoOptions.Value;
         }
 
@@ -93,11 +97,16 @@ namespace YS.Azure.ToDo.Services
                     .GetAsync(_ => _.Id == taskId, cancellationToken))
                 .FirstOrDefault();
 
-            if (existingTask != null)
+            if (existingTask == null)
             {
-                await _archivedTasksRepository.CreateAsync(existingTask, cancellationToken);
-                await _toDoCosmosRepository.DeleteAsync(taskId.ToString(), cancellationToken);
+                throw new TaskNotFoundException("Task not found.");
             }
+
+            var mappedTask = _mapper.Map<ToDoEntity>(existingTask);
+            mappedTask.Archived = true;
+
+            await _archivedTasksRepository.CreateAsync(mappedTask, cancellationToken);
+            await _toDoCosmosRepository.DeleteAsync(taskId, cancellationToken);
         }
 
         public async Task UnarchiveTaskAsync(string taskId, CancellationToken cancellationToken = default)
@@ -106,11 +115,25 @@ namespace YS.Azure.ToDo.Services
                     .GetAsync(_ => _.Id == taskId, cancellationToken))
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (existingTask != null)
+            if (existingTask == null)
             {
-                await _toDoCosmosRepository.UpsertAsync(existingTask, cancellationToken);
-                await _archivedTasksRepository.DeleteAsync(taskId, cancellationToken);
+                throw new TaskNotFoundException("Task not found.");
             }
+
+            var mappedTask = _mapper.Map<ToDoItemModel>(existingTask);
+            mappedTask.Archived = false;
+
+            await _toDoCosmosRepository.UpsertAsync(mappedTask, cancellationToken);
+            await _archivedTasksRepository.DeleteAsync(taskId, cancellationToken);
+        }
+
+        public async Task<IList<ToDoEntity>> GetArchivedTasksAsync(CancellationToken cancellationToken = default)
+        {
+            var archivedTasks = (await _archivedTasksRepository
+                    .GetAsync(cancellationToken: cancellationToken))
+                .ToList();
+
+            return archivedTasks;
         }
 
         public async Task UpdateTaskStatusesAsync(CancellationToken cancellationToken = default)

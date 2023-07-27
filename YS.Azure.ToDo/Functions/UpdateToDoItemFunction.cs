@@ -1,9 +1,11 @@
 ﻿using System.Net;
 using FluentValidation;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using YS.Azure.ToDo.Contracts;
 using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Helpers;
@@ -39,7 +41,10 @@ namespace YS.Azure.ToDo.Functions
             using (var streamReader = new StreamReader(req.Body))
             {
                 var stringContent = await streamReader.ReadToEndAsync();
-                itemModel = JsonConvert.DeserializeObject<ToDoItemModel>(stringContent)!;
+                itemModel = JsonConvert.DeserializeObject<ToDoItemModel>(stringContent, new IsoDateTimeConverter
+                {
+                    DateTimeFormat = "dd/MM/yyyy"
+                })!;
             }
 
             var validationResult = await _toDoValidator.ValidateAsync(itemModel);
@@ -56,17 +61,28 @@ namespace YS.Azure.ToDo.Functions
                     Error = "Input object is invalid"
                 });
             }
-            
-            var updatedItem = await _toDoService.UpdateToDoItemAsync(itemModel);
-            
-            _logger.LogInformation("TODO item successfully updated.");
 
-            return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
+            try
             {
-                OperationName = nameof(UpdateToDoItemFunction),
-                Response = updatedItem,
-                Message = "Item successfully updated."
-            });
+                var updatedItem = await _toDoService.UpdateToDoItemAsync(itemModel);
+                
+                _logger.LogInformation("TODO item successfully updated.");
+
+                return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
+                {
+                    OperationName = nameof(UpdateToDoItemFunction),
+                    Response = updatedItem,
+                    Message = "Item successfully updated."
+                });
+            }
+            catch (CosmosException e)
+            {
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(UpdateToDoItemFunction),
+                    Error = e.Message
+                });
+            }
         }
     }
 }

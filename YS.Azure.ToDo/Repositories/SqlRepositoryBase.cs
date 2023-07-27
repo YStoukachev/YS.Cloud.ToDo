@@ -64,18 +64,15 @@ namespace YS.Azure.ToDo.Repositories
 
         public async Task<IQueryable<TEntity>> GetAsync(Expression<Func<TEntity, bool>>? selector = null, CancellationToken cancellationToken = default)
         {
-            await using (_dbContext)
-            {
-                return selector == null
-                    ? _dbContext
-                        .Set<TEntity>()
-                        .AsQueryable()
-                        .Where(_ => true)
-                    : _dbContext
-                        .Set<TEntity>()
-                        .AsQueryable()
-                        .Where(selector);
-            }
+            return selector == null
+                ? _dbContext
+                    .Set<TEntity>()
+                    .AsQueryable()
+                    .Where(_ => true)
+                : _dbContext
+                    .Set<TEntity>()
+                    .AsQueryable()
+                    .Where(selector);
         }
 
         private async Task<TEntity?> GetExistingEntity(string id, CancellationToken cancellationToken = default)

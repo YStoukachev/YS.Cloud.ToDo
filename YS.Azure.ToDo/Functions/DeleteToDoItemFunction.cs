@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Web;
+using Microsoft.Azure.Cosmos;
 using Microsoft.Azure.Functions.Worker;
 using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
@@ -57,7 +58,18 @@ namespace YS.Azure.ToDo.Functions
                 });
             }
 
-            await _toDoService.DeleteToDoItemAsync(itemId);
+            try
+            {
+                await _toDoService.DeleteToDoItemAsync(itemId);
+            }
+            catch (CosmosException e)
+            {
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(DeleteToDoItemFunction),
+                    Error = e.Message
+                });
+            }
 
             return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
             {

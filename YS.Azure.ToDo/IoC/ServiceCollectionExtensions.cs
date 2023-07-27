@@ -88,5 +88,12 @@ namespace YS.Azure.ToDo.IoC
             
             return services;
         }
+
+        public static IServiceCollection AddAppMappers(this IServiceCollection services)
+        {
+            services.AddAutoMapper(Assembly.GetExecutingAssembly());
+
+            return services;
+        }
     }
 }
