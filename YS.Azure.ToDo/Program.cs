@@ -1,3 +1,4 @@
+using System.Reflection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using YS.Azure.ToDo.IoC;
@@ -30,7 +31,11 @@ namespace YS.Azure.ToDo
         {
             configurationBuilder
                 .SetBasePath(Directory.GetCurrentDirectory())
-                .AddJsonFile("local.settings.json", false);
+                .AddJsonFile("local.settings.json", optional: true)
+                .AddUserSecrets(Assembly.GetExecutingAssembly(), optional: true);
+
+            configurationBuilder
+                .AddEnvironmentVariables();
 
             configurationBuilder.Build();
         }

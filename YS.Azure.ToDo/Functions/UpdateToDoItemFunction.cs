@@ -65,7 +65,7 @@ namespace YS.Azure.ToDo.Functions
             try
             {
                 var updatedItem = await _toDoService.UpdateToDoItemAsync(itemModel);
-                
+
                 _logger.LogInformation("TODO item successfully updated.");
 
                 return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
@@ -77,6 +77,18 @@ namespace YS.Azure.ToDo.Functions
             }
             catch (CosmosException e)
             {
+                _logger.LogError(e.Message);
+                
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(UpdateToDoItemFunction),
+                    Error = e.Message
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                
                 return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
                 {
                     OperationName = nameof(UpdateToDoItemFunction),

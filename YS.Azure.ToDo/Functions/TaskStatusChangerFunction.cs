@@ -22,7 +22,14 @@ namespace YS.Azure.ToDo.Functions
         {
             _logger.LogInformation("Task status changer job is working.");
 
-            await _toDoService.UpdateTaskStatusesAsync();
+            try
+            {
+                await _toDoService.UpdateTaskStatusesAsync();
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+            }
             
             _logger.LogInformation("Task status changer finished working.");
         }

@@ -5,23 +5,21 @@ using YS.Azure.ToDo.Models;
 
 namespace YS.Azure.ToDo.Repositories
 {
-    public class SqlRepositoryBase<TEntity> where TEntity : IdEntity
+    public class SqlRepositoryBase<TEntity> : IDisposable, IAsyncDisposable where TEntity : IdEntity
     {
         private readonly ToDoContext _dbContext;
+        private readonly DbSet<TEntity> _dbSet;
 
         public SqlRepositoryBase(ToDoContext dbContext)
         {
             _dbContext = dbContext;
+            _dbSet = _dbContext.Set<TEntity>();
         }
 
         public async Task<TEntity> CreateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
-            await using (_dbContext)
-            {
-                await _dbContext
-                    .Set<TEntity>()
-                    .AddAsync(entity, cancellationToken);
-            }
+            await _dbSet
+                .AddAsync(entity, cancellationToken);
 
             return entity;
         }
@@ -29,18 +27,12 @@ namespace YS.Azure.ToDo.Repositories
         public async Task<TEntity> UpdateAsync(TEntity entity, CancellationToken cancellationToken = default)
         {
             var idEntity = entity as IdEntity;
-            
-            await using (_dbContext)
+
+            var existingEntity = await GetExistingEntity(idEntity.Id, cancellationToken);
+
+            if (existingEntity != null)
             {
-                var dbSet = _dbContext
-                    .Set<TEntity>();
-
-                var existingEntity = await GetExistingEntity(idEntity.Id, cancellationToken);
-
-                if (existingEntity != null)
-                {
-                    dbSet.Update(entity);
-                }
+                _dbSet.Update(entity);
             }
 
             return entity;
@@ -48,42 +40,53 @@ namespace YS.Azure.ToDo.Repositories
 
         public async Task DeleteAsync(string id, CancellationToken cancellationToken = default)
         {
-            await using (_dbContext)
+            var existingEntity = await GetExistingEntity(id, cancellationToken);
+
+            if (existingEntity != null)
             {
-                var dbSet = _dbContext
-                    .Set<TEntity>();
-
-                var existingEntity = await GetExistingEntity(id, cancellationToken);
-
-                if (existingEntity != null)
-                {
-                    dbSet.Remove(existingEntity);
-                }
+                _dbSet.Remove(existingEntity);
             }
         }
 
-        public async Task<IQueryable<TEntity>> GetAsync(Expression<Func<TEntity, bool>>? selector = null, CancellationToken cancellationToken = default)
+        public async Task<IQueryable<TEntity>> GetAsync(
+            Expression<Func<TEntity, bool>>? selector = null,
+            Expression<Func<TEntity, object>>[]? includeQuery = null,
+            CancellationToken cancellationToken = default)
         {
+            var query = _dbSet
+                .AsQueryable();
+
+            if (includeQuery != null)
+            {
+                foreach (var include in includeQuery)
+                {
+                    query = query.Include(include);
+                }
+            }
+            
             return selector == null
-                ? _dbContext
-                    .Set<TEntity>()
-                    .AsQueryable()
+                ? query
                     .Where(_ => true)
-                : _dbContext
-                    .Set<TEntity>()
-                    .AsQueryable()
+                : query
                     .Where(selector);
         }
 
         private async Task<TEntity?> GetExistingEntity(string id, CancellationToken cancellationToken = default)
         {
-            var dbSet = _dbContext
-                .Set<TEntity>();
-                
-            var existingEntity = await dbSet
+            var existingEntity = await _dbSet
                 .FirstOrDefaultAsync(_ => _.Id == id, cancellationToken: cancellationToken);
 
             return existingEntity;
+        }
+
+        public void Dispose()
+        {
+            _dbContext.SaveChanges();
+        }
+
+        public async ValueTask DisposeAsync()
+        {
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

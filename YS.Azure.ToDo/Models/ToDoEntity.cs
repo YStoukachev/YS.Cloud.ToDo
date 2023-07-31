@@ -13,5 +13,7 @@
         public bool Archived { get; set; }
 
         public DateTime? DueDate { get; set; }
+
+        public ICollection<TaskFilesEntity> Files { get; set; } = null!;
     }
 }

@@ -5,7 +5,6 @@ using Microsoft.Extensions.Logging;
 using YS.Azure.ToDo.Contracts.Services;
 using YS.Azure.ToDo.Exceptions;
 using YS.Azure.ToDo.Helpers;
-using YS.Azure.ToDo.Models;
 using YS.Azure.ToDo.Models.Requests;
 using YS.Azure.ToDo.Models.Responses;
 
@@ -42,20 +41,34 @@ namespace YS.Azure.ToDo.Functions
 
             try
             {
-                await _toDoService.UploadFileToTaskAsync(model);
-                
+                var createdFileName = await _toDoService.UploadFileToTaskAsync(model);
+
                 _logger.LogInformation("File successfully uploaded.");
 
                 return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
                 {
                     Message = "File successfully uploaded",
-                    OperationName = nameof(UploadFileToToDoItemFunction)
+                    OperationName = nameof(UploadFileToToDoItemFunction),
+                    Response = new
+                    {
+                        FileName = createdFileName
+                    }
                 });
             }
             catch (TaskNotFoundException e)
             {
                 _logger.LogWarning(e.Message);
 
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    Error = e.Message,
+                    OperationName = nameof(UploadFileToToDoItemFunction)
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                
                 return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
                 {
                     Error = e.Message,

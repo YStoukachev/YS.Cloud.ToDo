@@ -6,6 +6,7 @@ using Microsoft.Azure.Functions.Worker.Http;
 using Microsoft.Extensions.Logging;
 using YS.Azure.ToDo.Contracts;
 using YS.Azure.ToDo.Contracts.Services;
+using YS.Azure.ToDo.Exceptions;
 using YS.Azure.ToDo.Helpers;
 using YS.Azure.ToDo.Models;
 using YS.Azure.ToDo.Models.Responses;
@@ -62,8 +63,20 @@ namespace YS.Azure.ToDo.Functions
             {
                 await _toDoService.DeleteToDoItemAsync(itemId);
             }
+            catch (TaskNotFoundException e)
+            {
+                _logger.LogWarning(e.Message);
+                
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(DeleteToDoItemFunction),
+                    Error = e.Message
+                });
+            }
             catch (CosmosException e)
             {
+                _logger.LogError(e.Message);
+                
                 return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
                 {
                     OperationName = nameof(DeleteToDoItemFunction),

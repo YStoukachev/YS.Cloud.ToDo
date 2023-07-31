@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Options;
 using YS.Azure.ToDo.Configuration;
 using YS.Azure.ToDo.Contracts.Services;
+using YS.Azure.ToDo.Exceptions;
 
 namespace YS.Azure.ToDo.Services
 {
@@ -33,10 +34,12 @@ namespace YS.Azure.ToDo.Services
                 .ToListAsync(cancellationToken);
             var blobToDelete = existingBlobs.FirstOrDefault(_ => _.Name.Contains(fileName));
 
-            if (blobToDelete != null)
+            if (blobToDelete == null)
             {
-                await _blobContainerClient.DeleteBlobAsync(blobToDelete.Name, cancellationToken: cancellationToken);
+                throw new BlobNotFoundException("File with such name is not found.");
             }
+
+            await _blobContainerClient.DeleteBlobAsync(blobToDelete.Name, cancellationToken: cancellationToken);
         }
     }
 }

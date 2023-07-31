@@ -2,6 +2,7 @@
 using AutoMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 using YS.Azure.ToDo.Configuration;
 using YS.Azure.ToDo.Contracts.Repositories;
 using YS.Azure.ToDo.Contracts.Services;
@@ -18,18 +19,21 @@ namespace YS.Azure.ToDo.Services
         private readonly ToDoOptions _toDoOptions;
         private readonly IArchivedTasksRepository _archivedTasksRepository;
         private readonly IMapper _mapper;
+        private readonly IBlobStorageQueueService _queueService;
 
         public ToDoService(
             IToDoCosmosRepository toDoCosmosRepository, 
             IBlobStorageService blobStorageService, 
             IOptions<ToDoOptions> toDoOptions, 
             IArchivedTasksRepository archivedTasksRepository, 
-            IMapper mapper)
+            IMapper mapper, 
+            IBlobStorageQueueService queueService)
         {
             _toDoCosmosRepository = toDoCosmosRepository;
             _blobStorageService = blobStorageService;
             _archivedTasksRepository = archivedTasksRepository;
             _mapper = mapper;
+            _queueService = queueService;
             _toDoOptions = toDoOptions.Value;
         }
 
@@ -45,6 +49,23 @@ namespace YS.Azure.ToDo.Services
 
         public async Task DeleteToDoItemAsync(string itemId, CancellationToken cancellationToken = default)
         {
+            var existingItem = (await _toDoCosmosRepository
+                    .GetAsync(_ => _.Id == itemId, cancellationToken))
+                .FirstOrDefault();
+
+            if (existingItem == null)
+            {
+                throw new TaskNotFoundException("Task not found.");
+            }
+
+            if (existingItem.FileNames != null)
+            {
+                foreach (var fileName in existingItem.FileNames)
+                {
+                    await _blobStorageService.DeleteBlobAsync(fileName, cancellationToken);
+                }
+            }
+            
             await _toDoCosmosRepository.DeleteAsync(itemId, cancellationToken);
         }
 
@@ -53,7 +74,7 @@ namespace YS.Azure.ToDo.Services
             return await _toDoCosmosRepository.GetAsync(selector, cancellationToken);
         }
 
-        public async Task UploadFileToTaskAsync(AddFileRequestModel model, CancellationToken cancellationToken = default)
+        public async Task<string> UploadFileToTaskAsync(AddFileRequestModel model, CancellationToken cancellationToken = default)
         {
             var fileName = string
                 .Format(
@@ -83,12 +104,14 @@ namespace YS.Azure.ToDo.Services
                 existingTask.FileNames.Add(fileName);
             }
 
-            await _toDoCosmosRepository.UpsertAsync(existingTask, cancellationToken);
-            
             await _blobStorageService.UploadBlobAsync(
                 fileName,
                 model.File.FileContent, 
                 cancellationToken);
+            
+            await _toDoCosmosRepository.UpsertAsync(existingTask, cancellationToken);
+
+            return fileName;
         }
 
         public async Task ArchiveTaskAsync(string taskId, CancellationToken cancellationToken = default)
@@ -105,14 +128,25 @@ namespace YS.Azure.ToDo.Services
             var mappedTask = _mapper.Map<ToDoEntity>(existingTask);
             mappedTask.Archived = true;
 
-            await _archivedTasksRepository.CreateAsync(mappedTask, cancellationToken);
+            await using (_archivedTasksRepository)
+            {
+                await _archivedTasksRepository.CreateAsync(mappedTask, cancellationToken);
+            }
+            
             await _toDoCosmosRepository.DeleteAsync(taskId, cancellationToken);
         }
 
         public async Task UnarchiveTaskAsync(string taskId, CancellationToken cancellationToken = default)
         {
+            Expression<Func<ToDoEntity, object>> includeFiles = entity => entity.Files;
             var existingTask = await (await _archivedTasksRepository
-                    .GetAsync(_ => _.Id == taskId, cancellationToken))
+                    .GetAsync(
+                        selector => selector.Id == taskId,
+                        new []
+                        {
+                            includeFiles
+                        },
+                        cancellationToken: cancellationToken))
                 .FirstOrDefaultAsync(cancellationToken);
 
             if (existingTask == null)
@@ -123,8 +157,12 @@ namespace YS.Azure.ToDo.Services
             var mappedTask = _mapper.Map<ToDoItemModel>(existingTask);
             mappedTask.Archived = false;
 
+            await using (_archivedTasksRepository)
+            {
+                await _archivedTasksRepository.DeleteAsync(taskId, cancellationToken);
+            }
+            
             await _toDoCosmosRepository.UpsertAsync(mappedTask, cancellationToken);
-            await _archivedTasksRepository.DeleteAsync(taskId, cancellationToken);
         }
 
         public async Task<IList<ToDoEntity>> GetArchivedTasksAsync(CancellationToken cancellationToken = default)
@@ -134,6 +172,11 @@ namespace YS.Azure.ToDo.Services
                 .ToList();
 
             return archivedTasks;
+        }
+
+        public async Task DeleteFileFromTaskAsync(string fileName, CancellationToken cancellationToken = default)
+        {
+            await _blobStorageService.DeleteBlobAsync(fileName, cancellationToken);
         }
 
         public async Task UpdateTaskStatusesAsync(CancellationToken cancellationToken = default)
@@ -149,6 +192,7 @@ namespace YS.Azure.ToDo.Services
                     todoItem.Status = ToDoStatus.Done;
 
                     await _toDoCosmosRepository.UpsertAsync(todoItem, cancellationToken);
+                    await _queueService.SendMessageAsync(JsonConvert.SerializeObject(todoItem), cancellationToken);
                 }
             }
         }

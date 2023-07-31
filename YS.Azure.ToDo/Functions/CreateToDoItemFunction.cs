@@ -36,39 +36,72 @@ namespace YS.Azure.ToDo.Functions
             
             ToDoItemModel itemModel;
 
-            using (var streamReader = new StreamReader(req.Body))
+            try
             {
-                var stringContent = await streamReader.ReadToEndAsync();
-                itemModel = JsonConvert.DeserializeObject<ToDoItemModel>(stringContent)!;
+                using (var streamReader = new StreamReader(req.Body))
+                {
+                    var stringContent = await streamReader.ReadToEndAsync();
+                    itemModel = JsonConvert.DeserializeObject<ToDoItemModel>(stringContent)!;
+                }
+
+                itemModel.Id = Guid.NewGuid().ToString();
+
+                var validationResult = await _toDoItemValidator.ValidateAsync(itemModel);
+
+                _logger.LogInformation("TODO item validated.");
+
+                if (!validationResult.IsValid)
+                {
+                    _logger.LogWarning("TODO item is not valid.");
+
+                    return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                    {
+                        OperationName = nameof(CreateToDoItemFunction),
+                        Error = "Input object is invalid"
+                    });
+                }
+
+                var createdItem = await _toDoService.CreateToDoItemAsync(itemModel);
+
+                _logger.LogInformation("TODO item successfully created.");
+
+                return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
+                {
+                    OperationName = nameof(CreateToDoItemFunction),
+                    Response = createdItem,
+                    Message = "Item successfully created."
+                });
             }
-            
-            itemModel.Id = Guid.NewGuid().ToString();
-
-            var validationResult = await _toDoItemValidator.ValidateAsync(itemModel);
-            
-            _logger.LogInformation("TODO item validated.");
-
-            if (!validationResult.IsValid)
+            catch (ArgumentNullException e)
             {
-                _logger.LogWarning("TODO item is not valid.");
-                
+                _logger.LogWarning(e.Message);
+
                 return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
                 {
                     OperationName = nameof(CreateToDoItemFunction),
-                    Error = "Input object is invalid"
+                    Error = e.Message
                 });
             }
-
-            var createdItem = await _toDoService.CreateToDoItemAsync(itemModel);
-            
-            _logger.LogInformation("TODO item successfully created.");
-
-            return await req.CreateApiResponseAsync(HttpStatusCode.OK, new ApiResponseMessage
+            catch (JsonSerializationException e)
             {
-                OperationName = nameof(CreateToDoItemFunction),
-                Response = createdItem,
-                Message = "Item successfully created."
-            });
+                _logger.LogWarning(e.Message);
+
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(ArchiveToDoItemFunction),
+                    Error = e.Message
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(ArchiveToDoItemFunction),
+                    Error = e.Message
+                });
+            }
         }
     }
 }

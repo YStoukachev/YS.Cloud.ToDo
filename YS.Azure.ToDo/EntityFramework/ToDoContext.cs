@@ -7,6 +7,8 @@ namespace YS.Azure.ToDo.EntityFramework
     {
         public DbSet<ToDoEntity> ToDoItems { get; set; } = null!;
 
+        public DbSet<TaskFilesEntity> TaskFiles { get; set; } = null!;
+
         public ToDoContext()
         {
             
@@ -21,25 +23,23 @@ namespace YS.Azure.ToDo.EntityFramework
         {
             modelBuilder
                 .Entity<ToDoEntity>()
-                .ToTable("ArchivedTasks");
-            
+                .ToTable("ArchivedTasks")
+                .HasKey(_ => _.Id);
+
+            modelBuilder
+                .Entity<TaskFilesEntity>()
+                .ToTable("TaskFiles")
+                .HasKey(_ => _.Id);
+
             modelBuilder
                 .Entity<ToDoEntity>()
-                .HasKey(_ => _.Id);
+                .HasMany(_ => _.Files)
+                .WithOne(_ => _.Task)
+                .HasForeignKey(_ => _.TaskId)
+                .IsRequired(false)
+                .OnDelete(DeleteBehavior.Cascade);
             
             base.OnModelCreating(modelBuilder);
-        }
-
-        public override void Dispose()
-        {
-            base.SaveChanges();
-            base.Dispose();
-        }
-
-        public override ValueTask DisposeAsync()
-        {
-            base.SaveChangesAsync();
-            return base.DisposeAsync();
         }
     }
 }

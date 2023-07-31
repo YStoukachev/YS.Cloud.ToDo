@@ -16,12 +16,14 @@ namespace YS.Azure.ToDo.Contracts.Services
 
         Task UpdateTaskStatusesAsync(CancellationToken cancellationToken = default);
 
-        Task UploadFileToTaskAsync(AddFileRequestModel model, CancellationToken cancellationToken = default);
+        Task<string> UploadFileToTaskAsync(AddFileRequestModel model, CancellationToken cancellationToken = default);
 
         Task ArchiveTaskAsync(string taskId, CancellationToken cancellationToken = default);
 
         Task UnarchiveTaskAsync(string taskId, CancellationToken cancellationToken = default);
 
         Task<IList<ToDoEntity>> GetArchivedTasksAsync(CancellationToken cancellationToken = default);
+
+        Task DeleteFileFromTaskAsync(string fileName, CancellationToken cancellationToken = default);
     }
 }

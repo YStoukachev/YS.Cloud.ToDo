@@ -3,7 +3,7 @@ using YS.Azure.ToDo.Models;
 
 namespace YS.Azure.ToDo.Contracts.Repositories
 {
-    public interface ISqlRepository<TEntity> where TEntity : IdEntity
+    public interface ISqlRepository<TEntity> : IDisposable, IAsyncDisposable where TEntity : IdEntity
     {
         Task<TEntity> CreateAsync(TEntity entity, CancellationToken cancellationToken = default);
 
@@ -11,6 +11,9 @@ namespace YS.Azure.ToDo.Contracts.Repositories
 
         Task DeleteAsync(string id, CancellationToken cancellationToken = default);
         
-        Task<IQueryable<TEntity>> GetAsync(Expression<Func<TEntity, bool>>? selector = null, CancellationToken cancellationToken = default);
+        Task<IQueryable<TEntity>> GetAsync(
+            Expression<Func<TEntity, bool>>? selector = null, 
+            Expression<Func<TEntity, object>>[]? includeQuery = null,
+            CancellationToken cancellationToken = default);
     }
 }

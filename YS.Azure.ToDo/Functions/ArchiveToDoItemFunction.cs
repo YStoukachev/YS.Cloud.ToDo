@@ -32,30 +32,62 @@ namespace YS.Azure.ToDo.Functions
             _logger.LogInformation("Got request for archiving task.");
 
             ArchiveTaskRequestModel model;
-            
-            using (var streamReader = new StreamReader(req.Body))
-            {
-                var stringContent = await streamReader.ReadToEndAsync();
-                model = JsonConvert.DeserializeObject<ArchiveTaskRequestModel>(stringContent)!;
-            }
 
             try
             {
+                using (var streamReader = new StreamReader(req.Body))
+                {
+                    var stringContent = await streamReader.ReadToEndAsync();
+                    model = JsonConvert.DeserializeObject<ArchiveTaskRequestModel>(stringContent)!;
+                }
+
                 if (model.Archive)
                 {
                     await _toDoService.ArchiveTaskAsync(model.TaskId);
-                
+
                     _logger.LogInformation("Task successfully archived.");
                 }
                 else
                 {
                     await _toDoService.UnarchiveTaskAsync(model.TaskId);
-                
+
                     _logger.LogInformation("Task successfully unarchived.");
                 }
             }
+            catch (JsonSerializationException e)
+            {
+                _logger.LogWarning(e.Message);
+                
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(ArchiveToDoItemFunction),
+                    Error = e.Message
+                });
+            }
+            catch (ArgumentNullException e)
+            {
+                _logger.LogWarning(e.Message);
+                
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(ArchiveToDoItemFunction),
+                    Error = e.Message
+                });
+            }
             catch (TaskNotFoundException e)
             {
+                _logger.LogWarning(e.Message);
+                
+                return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
+                {
+                    OperationName = nameof(ArchiveToDoItemFunction),
+                    Error = e.Message
+                });
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e.Message);
+                
                 return await req.CreateApiResponseAsync(HttpStatusCode.BadRequest, new ApiResponseMessage
                 {
                     OperationName = nameof(ArchiveToDoItemFunction),

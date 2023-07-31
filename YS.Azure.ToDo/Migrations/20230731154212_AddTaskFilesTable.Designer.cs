@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using YS.Azure.ToDo.EntityFramework;
 
@@ -11,9 +12,11 @@ using YS.Azure.ToDo.EntityFramework;
 namespace YS.Azure.ToDo.Migrations
 {
     [DbContext(typeof(ToDoContext))]
-    partial class ToDoContextModelSnapshot : ModelSnapshot
+    [Migration("20230731154212_AddTaskFilesTable")]
+    partial class AddTaskFilesTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,8 +76,7 @@ namespace YS.Azure.ToDo.Migrations
                 {
                     b.HasOne("YS.Azure.ToDo.Models.ToDoEntity", "Task")
                         .WithMany("Files")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .HasForeignKey("TaskId");
 
                     b.Navigation("Task");
                 });

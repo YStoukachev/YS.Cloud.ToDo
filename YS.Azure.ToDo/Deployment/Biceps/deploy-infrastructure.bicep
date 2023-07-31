@@ -22,6 +22,9 @@ var appInsightName = 'ystodo${env}'
 var todoFunctionAppName = 'ystodo${env}'
 var todoHostingPlanName = 'ystodohostingplan${env}'
 var appInsightLocation = 'eastus'
+var apiManagementName = 'ystodoapimanagement${env}'
+var publisherEmail = 'y.stukachou@godeltech.com'
+var publisherName = 'Yaraslau Stukachou'
 
 module kv 'create-key-vault.bicep' = {
   name: 'deploy-key-vault'
@@ -106,4 +109,14 @@ module todoFunctionApp 'create-todo-function-app.bicep' = {
     storageAccount
     appInsight
   ]
+}
+
+module apiManagement 'create-api-management.bicep' = {
+  name: 'deploy-api-management'
+  params: {
+    location: location
+    apiManagementName: apiManagementName
+    publisherEmail: publisherEmail
+    publisherName: publisherName
+  }
 }

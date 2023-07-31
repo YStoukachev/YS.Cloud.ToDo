@@ -41,7 +41,9 @@ namespace YS.Azure.ToDo.IoC
                 .AddScoped<IToDoService, ToDoService>()
                 .AddScoped<IBlobStorageService, BlobStorageService>()
                 .AddScoped<IBlobClientProvider, BlobClientProvider>()
-                .AddScoped<IFormParser, FormParser>();
+                .AddScoped<IFormParser, FormParser>()
+                .AddScoped<IBlobStorageQueueService, BlobStorageQueueService>()
+                .AddScoped<IQueueClientProvider, QueueClientProvider>();
                 
             services    
                 .AddScoped<IArchivedTasksRepository, ArchivedTasksRepository>()
